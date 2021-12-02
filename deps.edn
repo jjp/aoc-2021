@@ -1,0 +1,4 @@
+{:paths ["src" "resources"]
+ :deps {hashp/hashp {:mvn/version "0.1.1"}
+        com.github.seancorfield/expectations {:mvn/version "2.0.0-alpha2"}
+        metosin/malli {:mvn/version "0.2.1"}}}
