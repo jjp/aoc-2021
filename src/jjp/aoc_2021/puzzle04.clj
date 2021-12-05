@@ -1,5 +1,6 @@
 (ns jjp.aoc-2021.puzzle04
   (:require
+   [hashp.core :refer :all]
    [clojure.java.io :as io]
    [clojure.string :as str]))
 
@@ -80,12 +81,14 @@
 (defn winner? [board]
   (or (->> board
            (filter #(winning-row? %))
-           (first))
+           (first)
+           )
       (->> (apply mapv vector board)
            (filter #(winning-row? %))
-           (first))))
+           (first)
+           )))
 
-(defn game [input]
+(defn game-part1 [input]
   (let [game-board (build-game input)
         rolls (first game-board)
         boards (second game-board)]
@@ -104,7 +107,7 @@
   )
 
 
-(defn score-game [input]
+(defn score-game [game input]
   (let [{:keys [roll winning-card]} (game input)
         unmarked-cells-sum (->> winning-card
                            (flatten)
@@ -117,31 +120,42 @@
     (* roll unmarked-cells-sum)
     ))
 
-(score-game input)
+(score-game game-part1 input)
 ;; => 51776
 
 ;;; answer for part one above!
 
-;; => (([14 1] [21 1] [17 1] [24 1] [4 1])
-;;     ([10 0] [16 0] [15 0] [9 1] [19 0])
-;;     ([18 0] [8 0] [23 1] [26 0] [20 0])
-;;     ([22 0] [11 1] [13 0] [6 0] [5 1])
-;;     ([2 1] [0 1] [12 0] [3 0] [7 1]))
 
-(build-game demo-input);; => [(7 4 9 5 11 17 23 2 0 14 21 24 10 16 13 6 15 25 12 22 18 20 8 19 3 26 1)
-;;     [[[[22 0] [13 0] [17 0] [11 0] [0 0]]
-;;       [[8 0] [2 0] [23 0] [4 0] [24 0]]
-;;       [[21 0] [9 0] [14 0] [16 0] [7 0]]
-;;       [[6 0] [10 0] [3 0] [18 0] [5 0]]
-;;       [[1 0] [12 0] [20 0] [15 0] [19 0]]]
-;;      [[[3 0] [15 0] [0 0] [2 0] [22 0]]
-;;       [[9 0] [18 0] [13 0] [17 0] [5 0]]
-;;       [[19 0] [8 0] [7 0] [25 0] [23 0]]
-;;       [[20 0] [11 0] [10 0] [24 0] [4 0]]
-;;       [[14 0] [21 0] [16 0] [12 0] [6 0]]]
-;;      [[[14 0] [21 0] [17 0] [24 0] [4 0]]
-;;       [[10 0] [16 0] [15 0] [9 0] [19 0]]
-;;       [[18 0] [8 0] [23 0] [26 0] [20 0]]
-;;       [[22 0] [11 0] [13 0] [6 0] [5 0]]
-;;       [[2 0] [0 0] [12 0] [3 0] [7 0]]]]]
+(defn game-part2 [input]
+  (let [game-board (build-game input)
+        rolls (first game-board)
+        boards (second game-board)]
+    (loop [rolls rolls
+           boards boards
+           last-winner {:roll nil :winning-card nil}]
+      (let [roll (first rolls)
+            boards (map #(mark-boards % roll) boards)
+            winners (filter winner? boards)
+            boards  (filter #(not (winner? %)) boards)
+            stats #p {:roll roll :boards (count boards) :winners (count winners) :last-roll (:roll last-winner)}
 
+            winner (first winners)
+            last-winner (if (nil? winner)
+                          last-winner
+                          {:roll roll :winning-card winner}
+                          )]
+        (if (nil? roll)
+          last-winner
+          (recur (rest rolls) boards last-winner))))))
+
+(game-part2 demo-input)
+
+(score-game game-part2 demo-input)
+;; => 1924
+
+(score-game game-part2 input)
+;; => 16830
+
+;;; that was an ugly completion - took about 3 hours
+;;; tripped up because I kept recounting winning boards, I had
+;;; to strip them out after they won
