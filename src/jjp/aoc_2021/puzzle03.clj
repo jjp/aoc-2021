@@ -35,6 +35,27 @@
        (sort-by second #(compare %2 %1))
        (ffirst)))
 
+(defn mcv2
+  [input]
+  (let [dist (frequencies input)
+        c0 (get dist \0)
+        c1 (get dist \1)]
+    (cond (= c0 c1) \1
+          (> c0 c1) \0
+          (> c1 c0) \1)))
+
+(defn lcv2
+  [input]
+  (let [dist (frequencies input)
+        c0 (get dist \0)
+        c1 (get dist \1)]
+    (cond (= c0 c1) \0
+          (< c0 c1) \0
+          (< c1 c0) \1)))
+
+(sort-by second #(compare %2 %1) {\1 1 \0 1});; => ([\1 1] [\0 1])
+(sort-by second #(compare %2 %1) {\0 1 \1 1})
+
 (defn pull-bits
   "takes the nth character or bit from a set of strings"
   [coll n]
@@ -62,3 +83,41 @@
   [gammas epsilons]
   (* (Long/parseLong gammas 2) (Long/parseLong epsilons 2)))
 ;; => 2967914
+
+
+;;; part 2
+
+(defn lcv
+  "returns the least most common value from a string."
+  [input]
+  (->> (into {} (frequencies input))
+       (sort-by second #(compare %1 %2))
+       (ffirst)))
+
+(defn ogr [input]
+  (loop [input input
+         pos 0]
+    (let [mcv (mcv2 (pull-bits input pos))
+          remaining (filter #(= mcv (nth % pos)) input)]
+      (if (= 1 (count remaining))
+        (first remaining)
+        (recur remaining (+ pos 1))))))
+
+(defn c02s [input]
+  (loop [input input
+         pos 0]
+    (let [lcv (lcv2 (pull-bits input pos))
+          remaining (filter #(= lcv (nth % pos)) input)]
+      (if (= 1 (count remaining))
+        (first remaining)
+        (recur remaining (+ pos 1))))))
+
+(let [ogr (ogr demo-input)
+      c02s (c02s demo-input)]
+  (* (Long/parseLong ogr 2) (Long/parseLong c02s 2)))
+;; => 230
+
+(let [ogr (ogr input)
+      c02s (c02s input)]
+  (* (Long/parseLong ogr 2) (Long/parseLong c02s 2)))
+;; => 7041258
